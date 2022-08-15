@@ -2,27 +2,28 @@ import asyncio
 import math
 from asyncio import *
 
-from yandex_music import Client
+from yandex_music import ClientAsync
 
 from mp3 import *
+from token import token
 
-token = ''
-
-track_num = 0
-client = Client(token)
-client.init()
+track_num = 11
+client = ClientAsync(token)
 
 
-def load_next_file(file_name: str = 'buffer.mp3'):
+async def load_next_file(file_name: str = 'buffer.mp3'):
     global track_num
-    album = client.users_likes_tracks()
-    track = album[track_num].fetch_track()
-    track.download(file_name, bitrate_in_kbps=192)
+    if not client.me:
+        await client.init()
+    album = await client.users_likes_tracks()
+    track = await album[track_num].fetch_track_async()
+    await track.download_async(file_name, bitrate_in_kbps=192)
     track_num = (track_num + 1) % len(album)
+    return
 
 
 async def get_connection_handler(file_name: str):
-    load_next_file(file_name)
+    await load_next_file(file_name)
 
     async def read_and_send_mp3_frame(reader: StreamReader, writer: StreamWriter):
         buffer_time = 10
@@ -49,7 +50,7 @@ async def get_connection_handler(file_name: str):
                     current_buffer_duration -= 5
                     await asyncio.sleep(current_buffer_duration)
                 await writer.drain()
-            load_next_file(file_name)
+            await load_next_file(file_name)
 
     return read_and_send_mp3_frame
 

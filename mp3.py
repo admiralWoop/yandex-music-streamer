@@ -4,9 +4,9 @@ from typing import Generator
 def fetch_frames(file_name: str = 'buffer.mp3') -> Generator[bytes, None, None]:
     with open('buffer.mp3', 'rb', buffering=1024) as mp3_buffer:
         while mp3_buffer.peek(1) != b'':
-            header = mp3_buffer.peek(4)[:4]
+            header = mp3_buffer.read(4)
             frame_len = get_frame_len(bytes(header))
-            yield mp3_buffer.read(frame_len)
+            yield header + mp3_buffer.read(frame_len - 4)
         mp3_buffer.close()
 
 
