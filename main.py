@@ -1,14 +1,15 @@
 import asyncio
 import math
-from asyncio import *
+import random
+from asyncio import StreamReader, StreamWriter
 
 from yandex_music import ClientAsync
 
 from mp3 import *
-from token import token
+from token_config import ya_mu_token
 
-track_num = 11
-client = ClientAsync(token)
+track_num = 2
+client = ClientAsync(ya_mu_token)
 
 
 async def load_next_file(file_name: str = 'buffer.mp3'):
@@ -16,9 +17,9 @@ async def load_next_file(file_name: str = 'buffer.mp3'):
     if not client.me:
         await client.init()
     album = await client.users_likes_tracks()
+    track_num = random.randint(0, len(album) - 1)
     track = await album[track_num].fetch_track_async()
     await track.download_async(file_name, bitrate_in_kbps=192)
-    track_num = (track_num + 1) % len(album)
     return
 
 
